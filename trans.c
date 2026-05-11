@@ -37,21 +37,27 @@ int main()
         case 1:
             textFile(cfPtr);
             break;
+
         case 2:
             updateRecord(cfPtr);
             break;
+
         case 3:
             newRecord(cfPtr);
             break;
+
         case 4:
             deleteRecord(cfPtr);
             break;
+
         case 5:
             displayAll(cfPtr);
             break;
+
         case 6:
             searchRecord(cfPtr);
             break;
+
         default:
             printf("Invalid choice\n");
         }
@@ -77,6 +83,7 @@ unsigned int enterChoice(void)
     printf("Enter choice: ");
 
     scanf("%u", &choice);
+
     return choice;
 }
 
@@ -97,17 +104,20 @@ void textFile(FILE *readPtr)
     fprintf(writePtr, "%-6s%-16s%-11s%10s\n",
             "Acct", "Last Name", "First Name", "Balance");
 
-    while (fread(&client, sizeof(struct clientData), 1, readPtr))
+    while (fread(&client, sizeof(struct clientData), 1, readPtr) == 1)
     {
         if (client.acctNum != 0)
         {
             fprintf(writePtr, "%-6u%-16s%-11s%10.2f\n",
-                    client.acctNum, client.lastName,
-                    client.firstName, client.balance);
+                    client.acctNum,
+                    client.lastName,
+                    client.firstName,
+                    client.balance);
         }
     }
 
     fclose(writePtr);
+
     printf("Data saved to accounts.txt\n");
 }
 
@@ -121,7 +131,16 @@ void updateRecord(FILE *fPtr)
     printf("Enter account number: ");
     scanf("%u", &account);
 
-    fseek(fPtr, (account - 1) * sizeof(struct clientData), SEEK_SET);
+    if (account < 1 || account > 100)
+    {
+        printf("Invalid account number!\n");
+        return;
+    }
+
+    fseek(fPtr,
+          (account - 1) * sizeof(struct clientData),
+          SEEK_SET);
+
     fread(&client, sizeof(struct clientData), 1, fPtr);
 
     if (client.acctNum == 0)
@@ -131,6 +150,7 @@ void updateRecord(FILE *fPtr)
     }
 
     printf("Current Balance: %.2f\n", client.balance);
+
     printf("Enter amount (+deposit / -withdraw): ");
     scanf("%lf", &transaction);
 
@@ -138,10 +158,12 @@ void updateRecord(FILE *fPtr)
 
     if (client.balance < 100)
     {
-        printf("⚠ Warning: Low balance!\n");
+        printf("Warning: Low balance!\n");
     }
 
-    fseek(fPtr, -sizeof(struct clientData), SEEK_CUR);
+    // corrected line
+    fseek(fPtr, -(long)sizeof(struct clientData), SEEK_CUR);
+
     fwrite(&client, sizeof(struct clientData), 1, fPtr);
 
     printf("Updated successfully!\n");
@@ -156,7 +178,16 @@ void newRecord(FILE *fPtr)
     printf("Enter account number (1-100): ");
     scanf("%u", &accountNum);
 
-    fseek(fPtr, (accountNum - 1) * sizeof(struct clientData), SEEK_SET);
+    if (accountNum < 1 || accountNum > 100)
+    {
+        printf("Invalid account number!\n");
+        return;
+    }
+
+    fseek(fPtr,
+          (accountNum - 1) * sizeof(struct clientData),
+          SEEK_SET);
+
     fread(&client, sizeof(struct clientData), 1, fPtr);
 
     if (client.acctNum != 0)
@@ -166,11 +197,18 @@ void newRecord(FILE *fPtr)
     }
 
     printf("Enter Lastname Firstname Balance: ");
-    scanf("%14s%9s%lf", client.lastName, client.firstName, &client.balance);
+
+    scanf("%14s%9s%lf",
+          client.lastName,
+          client.firstName,
+          &client.balance);
 
     client.acctNum = accountNum;
 
-    fseek(fPtr, (accountNum - 1) * sizeof(struct clientData), SEEK_SET);
+    fseek(fPtr,
+          (accountNum - 1) * sizeof(struct clientData),
+          SEEK_SET);
+
     fwrite(&client, sizeof(struct clientData), 1, fPtr);
 
     printf("Account created successfully!\n");
@@ -181,12 +219,22 @@ void deleteRecord(FILE *fPtr)
 {
     struct clientData blank = {0, "", "", 0.0};
     struct clientData client;
+
     unsigned int accountNum;
 
     printf("Enter account number to delete: ");
     scanf("%u", &accountNum);
 
-    fseek(fPtr, (accountNum - 1) * sizeof(struct clientData), SEEK_SET);
+    if (accountNum < 1 || accountNum > 100)
+    {
+        printf("Invalid account number!\n");
+        return;
+    }
+
+    fseek(fPtr,
+          (accountNum - 1) * sizeof(struct clientData),
+          SEEK_SET);
+
     fread(&client, sizeof(struct clientData), 1, fPtr);
 
     if (client.acctNum == 0)
@@ -195,7 +243,10 @@ void deleteRecord(FILE *fPtr)
         return;
     }
 
-    fseek(fPtr, (accountNum - 1) * sizeof(struct clientData), SEEK_SET);
+    fseek(fPtr,
+          (accountNum - 1) * sizeof(struct clientData),
+          SEEK_SET);
+
     fwrite(&blank, sizeof(struct clientData), 1, fPtr);
 
     printf("Account deleted!\n");
@@ -209,9 +260,12 @@ void displayAll(FILE *fPtr)
     rewind(fPtr);
 
     printf("\n%-6s%-16s%-11s%10s\n",
-           "Acct", "Last Name", "First Name", "Balance");
+           "Acct",
+           "Last Name",
+           "First Name",
+           "Balance");
 
-    while (fread(&client, sizeof(struct clientData), 1, fPtr))
+    while (fread(&client, sizeof(struct clientData), 1, fPtr) == 1)
     {
         if (client.acctNum != 0)
         {
@@ -233,7 +287,16 @@ void searchRecord(FILE *fPtr)
     printf("Enter account number to search: ");
     scanf("%u", &account);
 
-    fseek(fPtr, (account - 1) * sizeof(struct clientData), SEEK_SET);
+    if (account < 1 || account > 100)
+    {
+        printf("Invalid account number!\n");
+        return;
+    }
+
+    fseek(fPtr,
+          (account - 1) * sizeof(struct clientData),
+          SEEK_SET);
+
     fread(&client, sizeof(struct clientData), 1, fPtr);
 
     if (client.acctNum == 0)
@@ -244,7 +307,11 @@ void searchRecord(FILE *fPtr)
     {
         printf("\nAccount Found:\n");
         printf("Account No: %u\n", client.acctNum);
-        printf("Name: %s %s\n", client.firstName, client.lastName);
-        printf("Balance: %.2f\n", client.balance);
+        printf("Name: %s %s\n",
+               client.firstName,
+               client.lastName);
+
+        printf("Balance: %.2f\n",
+               client.balance);
     }
 }
